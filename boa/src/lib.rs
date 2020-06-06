@@ -7,6 +7,10 @@ pub mod environment;
 pub mod exec;
 pub mod realm;
 pub mod syntax;
+
+#[cfg(feature = "experimental-vm")]
+mod vm;
+
 #[cfg(feature = "wasm-bindgen")]
 mod wasm;
 

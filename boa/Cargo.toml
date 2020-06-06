@@ -13,6 +13,7 @@ edition = "2018"
 [features]
 serde-ast = ["serde"]
 default = ["wasm-bindgen"]
+experimental-vm = []
 
 [dependencies]
 gc = "0.3.3"
