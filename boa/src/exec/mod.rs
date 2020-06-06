@@ -28,12 +28,14 @@ use std::{
 };
 
 /// An execution engine
-pub trait Executor {
+pub trait Executor<Executable> {
     /// Make a new execution engine
     fn new(realm: Realm) -> Self;
-    /// Run an expression
-    fn run(&mut self, expr: &Expr) -> ResultValue;
+
+    /// Run an executable
+    fn run(&mut self, exe: Executable) -> ResultValue;
 }
+
 
 /// A Javascript intepreter
 #[derive(Debug)]
@@ -59,7 +61,7 @@ fn exec_assign_op(op: &AssignOp, v_a: ValueData, v_b: ValueData) -> Value {
     })
 }
 
-impl Executor for Interpreter {
+impl Executor<&Expr> for Interpreter {
     fn new(realm: Realm) -> Self {
         Interpreter {
             realm,

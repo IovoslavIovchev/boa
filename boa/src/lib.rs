@@ -9,7 +9,7 @@ pub mod realm;
 pub mod syntax;
 
 #[cfg(feature = "experimental-vm")]
-mod vm;
+pub mod vm;
 
 #[cfg(feature = "wasm-bindgen")]
 mod wasm;
@@ -56,10 +56,26 @@ pub fn forward(engine: &mut Interpreter, src: &str) -> String {
 /// The str is consumed and the state of the Interpreter is changed
 /// Similar to `forward`, except the current value is returned instad of the string
 /// If the interpreter fails parsing an error value is returned instead (error object)
+#[cfg(not(feature = "experimental-vm"))]
 pub fn forward_val(engine: &mut Interpreter, src: &str) -> ResultValue {
     // Setup executor
     match parser_expr(src) {
         Ok(expr) => engine.run(&expr),
+        Err(e) => {
+            eprintln!("{}", e);
+            std::process::exit(1);
+        }
+    }
+}
+
+/// Execute the code using an already existing VM.
+#[cfg(feature = "experimental-vm")]
+pub fn forward_val(engine: &mut vm::VM, src: &str) -> ResultValue {
+    match parser_expr(src) {
+        Ok(expr) => {
+            let instrs = vm::Compiler::new().compile(&expr);
+            engine.run(&instrs)
+        }
         Err(e) => {
             eprintln!("{}", e);
             std::process::exit(1);

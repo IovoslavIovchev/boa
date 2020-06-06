@@ -24,6 +24,24 @@ struct Opt {
     #[structopt(name = "FILE", parse(from_os_str))]
     files: Vec<PathBuf>,
 
+    /// Uses the experimental VM instead of the interpreter.
+    #[structopt(long)]
+    #[cfg(feature = "experimental-vm")]
+    experimental_vm: bool,
+
+    /// Dump the VM bytecode to stdout with the given format.
+    #[structopt(
+        long,
+        short = "-b",
+        value_name = "FORMAT",
+        possible_values = &DumpFormat::variants(),
+        case_insensitive = true,
+        conflicts_with = "dump-ast",
+        conflicts_with = "dump-tokens",
+    )]
+    #[cfg(feature = "experimental-vm")]
+    dump_bytecode: Option<Option<DumpFormat>>,
+
     /// Dump the token stream to stdout with the given format.
     #[structopt(
         long,

@@ -1,5 +1,6 @@
 use crate::{
     builtins::value::{undefined, ResultValue, ToValue, Value, ValueData},
+    exec::Executor,
     environment::lexical_environment::VariableScope,
     realm::Realm,
     syntax::ast::{
@@ -13,16 +14,6 @@ use gc::Gc;
 mod tests;
 
 // === Misc
-/// An execution engine
-/// Similar to the one is crate::exec
-pub trait Executor<Executable> {
-    /// Make a new execution engine
-    fn new(realm: Realm) -> Self;
-
-    /// Run an executable
-    fn run(&mut self, exe: Executable) -> ResultValue;
-}
-
 #[derive(Copy, Clone, Debug)]
 pub struct Reg(u8);
 
