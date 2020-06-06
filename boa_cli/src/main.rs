@@ -66,8 +66,14 @@ struct Opt {
 
 impl Opt {
     /// Returns whether a dump flag has been used.
+    #[cfg(not(feature = "experimental-vm"))]
     fn has_dump_flag(&self) -> bool {
         self.dump_tokens.is_some() || self.dump_ast.is_some()
+    }
+
+    #[cfg(feature = "experimental-vm")]
+    fn has_dump_flag(&self) -> bool {
+        self.dump_tokens.is_some() || self.dump_ast.is_some() || self.dump_bytecode.is_some()
     }
 }
 
@@ -117,6 +123,22 @@ fn parse_tokens(tokens: Vec<Token>) -> Result<Expr, String> {
         .map_err(|e| format!("ParsingError: {}", e))
 }
 
+macro_rules! dump {
+    ($fmt:expr, $v:expr) => {
+        match $fmt {
+            Some(fmt) => match fmt {
+                DumpFormat::Debug => println!("{:#?}", $v),
+                DumpFormat::Json => println!("{}", serde_json::to_string(&$v).unwrap()),
+                DumpFormat::JsonPretty => {
+                    println!("{}", serde_json::to_string_pretty(&$v).unwrap())
+                }
+            },
+            // Default token stream dumping format.
+            None => println!("{:#?}", $v),
+        }
+    };
+}
+
 /// Dumps the token stream or ast to stdout depending on the given arguments.
 ///
 /// Returns a error of type String with a error message,
@@ -125,30 +147,14 @@ fn dump(src: &str, args: &Opt) -> Result<(), String> {
     let tokens = lex_source(src)?;
 
     if let Some(ref arg) = args.dump_tokens {
-        match arg {
-            Some(format) => match format {
-                DumpFormat::Debug => println!("{:#?}", tokens),
-                DumpFormat::Json => println!("{}", serde_json::to_string(&tokens).unwrap()),
-                DumpFormat::JsonPretty => {
-                    println!("{}", serde_json::to_string_pretty(&tokens).unwrap())
-                }
-            },
-            // Default token stream dumping format.
-            None => println!("{:#?}", tokens),
-        }
+        dump!(arg, tokens);
     } else if let Some(ref arg) = args.dump_ast {
         let ast = parse_tokens(tokens)?;
-
-        match arg {
-            Some(format) => match format {
-                DumpFormat::Debug => println!("{:#?}", ast),
-                DumpFormat::Json => println!("{}", serde_json::to_string(&ast).unwrap()),
-                DumpFormat::JsonPretty => {
-                    println!("{}", serde_json::to_string_pretty(&ast).unwrap())
-                }
-            },
-            // Default ast dumping format.
-            None => println!("{:#?}", ast),
+        dump!(arg, ast);
+    } else if cfg!(feature = "experimental-vm") {
+        #[cfg(feature = "experimental-vm")]
+        if let Some(ref arg) = args.dump_bytecode {
+            // code for dumping the bytecode goes here..
         }
     }
 
@@ -161,6 +167,10 @@ pub fn main() -> Result<(), std::io::Error> {
     let realm = Realm::create().register_global_func("print", log);
 
     let mut engine = Executor::new(realm);
+
+    if cfg!(feature = "experimental-vm") {
+        println!("=== experimental VM in use ===");
+    }
 
     for file in &args.files {
         let buffer = read_to_string(file)?;

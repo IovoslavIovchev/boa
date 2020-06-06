@@ -1,7 +1,7 @@
 use crate::{
     builtins::value::{undefined, ResultValue, ToValue, Value, ValueData},
-    exec::Executor,
     environment::lexical_environment::VariableScope,
+    exec::Executor,
     realm::Realm,
     syntax::ast::{
         constant::Const,
