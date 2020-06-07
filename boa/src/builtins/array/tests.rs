@@ -1,17 +1,15 @@
-use crate::exec::Executor;
-use crate::forward;
-use crate::realm::Realm;
+use crate::{exec::Interpreter, forward, realm::Realm};
 
 #[test]
 fn is_array() {
     let realm = Realm::create();
-    let mut engine = Executor::new(realm);
+    let mut engine = Interpreter::new(realm);
     let init = r#"
         var empty = [];
         var new_arr = new Array();
         var many = ["a", "b", "c"];
         "#;
-    forward(&mut engine, init);
+    eprintln!("{}", forward(&mut engine, init));
     assert_eq!(forward(&mut engine, "Array.isArray(empty)"), "true");
     assert_eq!(forward(&mut engine, "Array.isArray(new_arr)"), "true");
     assert_eq!(forward(&mut engine, "Array.isArray(many)"), "true");
@@ -46,12 +44,12 @@ fn is_array() {
 fn concat() {
     //TODO: array display formatter
     // let realm = Realm::create();
-    // let mut engine = Executor::new(realm);
+    // let mut engine = Interpreter::new(realm);
     // let init = r#"
     // var empty = new Array();
     // var one = new Array(1);
     // "#;
-    // forward(&mut engine, init);
+    // eprintln!("{}", forward(&mut engine, init));
     // // Empty ++ Empty
     // let ee = forward(&mut engine, "empty.concat(empty)");
     // assert_eq!(ee, String::from("[]"));
@@ -69,13 +67,13 @@ fn concat() {
 #[test]
 fn join() {
     let realm = Realm::create();
-    let mut engine = Executor::new(realm);
+    let mut engine = Interpreter::new(realm);
     let init = r#"
         var empty = [ ];
         var one = ["a"];
         var many = ["a", "b", "c"];
         "#;
-    forward(&mut engine, init);
+    eprintln!("{}", forward(&mut engine, init));
     // Empty
     let empty = forward(&mut engine, "empty.join('.')");
     assert_eq!(empty, String::from(""));
@@ -90,13 +88,13 @@ fn join() {
 #[test]
 fn to_string() {
     let realm = Realm::create();
-    let mut engine = Executor::new(realm);
+    let mut engine = Interpreter::new(realm);
     let init = r#"
         var empty = [ ];
         var one = ["a"];
         var many = ["a", "b", "c"];
         "#;
-    forward(&mut engine, init);
+    eprintln!("{}", forward(&mut engine, init));
     // Empty
     let empty = forward(&mut engine, "empty.toString()");
     assert_eq!(empty, String::from(""));
@@ -111,7 +109,7 @@ fn to_string() {
 #[test]
 fn every() {
     let realm = Realm::create();
-    let mut engine = Executor::new(realm);
+    let mut engine = Interpreter::new(realm);
     // taken from https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/every
     let init = r#"
         var empty = [];
@@ -136,7 +134,7 @@ fn every() {
           return elem < 3;
         }
         "#;
-    forward(&mut engine, init);
+    eprintln!("{}", forward(&mut engine, init));
     let result = forward(&mut engine, "array.every(callback);");
     assert_eq!(result, "true");
 
@@ -156,14 +154,14 @@ fn every() {
 #[test]
 fn find() {
     let realm = Realm::create();
-    let mut engine = Executor::new(realm);
+    let mut engine = Interpreter::new(realm);
     let init = r#"
         function comp(a) {
             return a == "a";
         }
         var many = ["a", "b", "c"];
         "#;
-    forward(&mut engine, init);
+    eprintln!("{}", forward(&mut engine, init));
     let found = forward(&mut engine, "many.find(comp)");
     assert_eq!(found, String::from("a"));
 }
@@ -171,7 +169,7 @@ fn find() {
 #[test]
 fn find_index() {
     let realm = Realm::create();
-    let mut engine = Executor::new(realm);
+    let mut engine = Interpreter::new(realm);
 
     let code = r#"
         function comp(item) {
@@ -197,11 +195,11 @@ fn find_index() {
 #[test]
 fn push() {
     let realm = Realm::create();
-    let mut engine = Executor::new(realm);
+    let mut engine = Interpreter::new(realm);
     let init = r#"
         var arr = [1, 2];
         "#;
-    forward(&mut engine, init);
+    eprintln!("{}", forward(&mut engine, init));
 
     assert_eq!(forward(&mut engine, "arr.push()"), "2");
     assert_eq!(forward(&mut engine, "arr.push(3, 4)"), "4");
@@ -212,13 +210,13 @@ fn push() {
 #[test]
 fn pop() {
     let realm = Realm::create();
-    let mut engine = Executor::new(realm);
+    let mut engine = Interpreter::new(realm);
     let init = r#"
         var empty = [ ];
         var one = [1];
         var many = [1, 2, 3, 4];
         "#;
-    forward(&mut engine, init);
+    eprintln!("{}", forward(&mut engine, init));
 
     assert_eq!(
         forward(&mut engine, "empty.pop()"),
@@ -234,13 +232,13 @@ fn pop() {
 #[test]
 fn shift() {
     let realm = Realm::create();
-    let mut engine = Executor::new(realm);
+    let mut engine = Interpreter::new(realm);
     let init = r#"
         var empty = [ ];
         var one = [1];
         var many = [1, 2, 3, 4];
         "#;
-    forward(&mut engine, init);
+    eprintln!("{}", forward(&mut engine, init));
 
     assert_eq!(
         forward(&mut engine, "empty.shift()"),
@@ -256,11 +254,11 @@ fn shift() {
 #[test]
 fn unshift() {
     let realm = Realm::create();
-    let mut engine = Executor::new(realm);
+    let mut engine = Interpreter::new(realm);
     let init = r#"
         var arr = [3, 4];
         "#;
-    forward(&mut engine, init);
+    eprintln!("{}", forward(&mut engine, init));
 
     assert_eq!(forward(&mut engine, "arr.unshift()"), "2");
     assert_eq!(forward(&mut engine, "arr.unshift(1, 2)"), "4");
@@ -271,12 +269,12 @@ fn unshift() {
 #[test]
 fn reverse() {
     let realm = Realm::create();
-    let mut engine = Executor::new(realm);
+    let mut engine = Interpreter::new(realm);
     let init = r#"
         var arr = [1, 2];
         var reversed = arr.reverse();
         "#;
-    forward(&mut engine, init);
+    eprintln!("{}", forward(&mut engine, init));
     assert_eq!(forward(&mut engine, "reversed[0]"), "2");
     assert_eq!(forward(&mut engine, "reversed[1]"), "1");
     assert_eq!(forward(&mut engine, "arr[0]"), "2");
@@ -286,14 +284,14 @@ fn reverse() {
 #[test]
 fn index_of() {
     let realm = Realm::create();
-    let mut engine = Executor::new(realm);
+    let mut engine = Interpreter::new(realm);
     let init = r#"
         var empty = [ ];
         var one = ["a"];
         var many = ["a", "b", "c"];
         var duplicates = ["a", "b", "c", "a", "b"];
         "#;
-    forward(&mut engine, init);
+    eprintln!("{}", forward(&mut engine, init));
 
     // Empty
     let empty = forward(&mut engine, "empty.indexOf('a')");
@@ -350,14 +348,14 @@ fn index_of() {
 #[test]
 fn last_index_of() {
     let realm = Realm::create();
-    let mut engine = Executor::new(realm);
+    let mut engine = Interpreter::new(realm);
     let init = r#"
         var empty = [ ];
         var one = ["a"];
         var many = ["a", "b", "c"];
         var duplicates = ["a", "b", "c", "a", "b"];
         "#;
-    forward(&mut engine, init);
+    eprintln!("{}", forward(&mut engine, init));
 
     // Empty
     let empty = forward(&mut engine, "empty.lastIndexOf('a')");
@@ -414,7 +412,7 @@ fn last_index_of() {
 #[test]
 fn fill() {
     let realm = Realm::create();
-    let mut engine = Executor::new(realm);
+    let mut engine = Interpreter::new(realm);
 
     forward(&mut engine, "var a = [1, 2, 3];");
     assert_eq!(
@@ -509,9 +507,9 @@ fn fill() {
 }
 
 #[test]
-fn inclues_value() {
+fn includes_value() {
     let realm = Realm::create();
-    let mut engine = Executor::new(realm);
+    let mut engine = Interpreter::new(realm);
     let init = r#"
         var empty = [ ];
         var one = ["a"];
@@ -519,7 +517,7 @@ fn inclues_value() {
         var duplicates = ["a", "b", "c", "a", "b"];
         var undefined = [undefined];
         "#;
-    forward(&mut engine, init);
+    eprintln!("{}", forward(&mut engine, init));
 
     // Empty
     let empty = forward(&mut engine, "empty.includes('a')");
@@ -550,7 +548,7 @@ fn inclues_value() {
 #[test]
 fn map() {
     let realm = Realm::create();
-    let mut engine = Executor::new(realm);
+    let mut engine = Interpreter::new(realm);
 
     let js = r#"
         var empty = [];
@@ -611,7 +609,7 @@ fn map() {
 #[test]
 fn slice() {
     let realm = Realm::create();
-    let mut engine = Executor::new(realm);
+    let mut engine = Interpreter::new(realm);
     let init = r#"
         var empty = [ ].slice();
         var one = ["a"].slice();
@@ -619,7 +617,7 @@ fn slice() {
         var many2 = ["a", "b", "c", "d"].slice(2, 3);
         var many3 = ["a", "b", "c", "d"].slice(7);
         "#;
-    forward(&mut engine, init);
+    eprintln!("{}", forward(&mut engine, init));
 
     assert_eq!(forward(&mut engine, "empty.length"), "0");
     assert_eq!(forward(&mut engine, "one[0]"), "a");
@@ -635,7 +633,7 @@ fn slice() {
 #[test]
 fn for_each() {
     let realm = Realm::create();
-    let mut engine = Executor::new(realm);
+    let mut engine = Interpreter::new(realm);
     let init = r#"
         var a = [2, 3, 4, 5];
         var sum = 0;
@@ -648,7 +646,7 @@ fn for_each() {
         }
         a.forEach(callingCallback);
         "#;
-    forward(&mut engine, init);
+    eprintln!("{}", forward(&mut engine, init));
 
     assert_eq!(forward(&mut engine, "sum"), "14");
     assert_eq!(forward(&mut engine, "indexSum"), "6");
@@ -658,7 +656,7 @@ fn for_each() {
 #[test]
 fn for_each_push_value() {
     let realm = Realm::create();
-    let mut engine = Executor::new(realm);
+    let mut engine = Interpreter::new(realm);
     let init = r#"
         var a = [1, 2, 3, 4];
         function callingCallback(item, index, list) {
@@ -666,7 +664,7 @@ fn for_each_push_value() {
         }
         a.forEach(callingCallback);
         "#;
-    forward(&mut engine, init);
+    eprintln!("{}", forward(&mut engine, init));
 
     // [ 1, 2, 3, 4, 2, 4, 6, 8 ]
     assert_eq!(forward(&mut engine, "a.length"), "8");
@@ -679,7 +677,7 @@ fn for_each_push_value() {
 #[test]
 fn filter() {
     let realm = Realm::create();
-    let mut engine = Executor::new(realm);
+    let mut engine = Interpreter::new(realm);
 
     let js = r#"
         var empty = [];
@@ -741,4 +739,75 @@ fn filter() {
         forward(&mut engine, "many_zero_filtered[0]"),
         String::from("0")
     );
+}
+
+#[test]
+fn some() {
+    let realm = Realm::create();
+    let mut engine = Interpreter::new(realm);
+    let init = r#"
+        var empty = [];
+
+        var array = [11, 23, 45];
+        function lessThan10(element) {
+            return element > 10;
+        }
+        function greaterThan10(element) {
+            return element < 10;
+        }
+
+        // Cases where callback mutates the array.
+        var appendArray = [1,2,3,4];
+        function appendingCallback(elem,index,arr) {
+          arr.push('new');
+          return elem !== "new";
+        }
+
+        var delArray = [1,2,3,4];
+        function deletingCallback(elem,index,arr) {
+          arr.pop()
+          return elem < 3;
+        }
+        "#;
+    forward(&mut engine, init);
+    let result = forward(&mut engine, "array.some(lessThan10);");
+    assert_eq!(result, "true");
+
+    let result = forward(&mut engine, "empty.some(lessThan10);");
+    assert_eq!(result, "false");
+
+    let result = forward(&mut engine, "array.some(greaterThan10);");
+    assert_eq!(result, "false");
+
+    let result = forward(&mut engine, "appendArray.some(appendingCallback);");
+    let append_array_length = forward(&mut engine, "appendArray.length");
+    assert_eq!(append_array_length, "5");
+    assert_eq!(result, "true");
+
+    let result = forward(&mut engine, "delArray.some(deletingCallback);");
+    let del_array_length = forward(&mut engine, "delArray.length");
+    assert_eq!(del_array_length, "3");
+    assert_eq!(result, "true");
+}
+
+#[test]
+fn call_array_constructor_with_one_argument() {
+    let realm = Realm::create();
+    let mut engine = Interpreter::new(realm);
+    let init = r#"
+        var empty = new Array(0);
+
+        var five = new Array(5);
+
+        var one = new Array("Hello, world!");
+        "#;
+    forward(&mut engine, init);
+    let result = forward(&mut engine, "empty.length");
+    assert_eq!(result, "0");
+
+    let result = forward(&mut engine, "five.length");
+    assert_eq!(result, "5");
+
+    let result = forward(&mut engine, "one.length");
+    assert_eq!(result, "1");
 }

@@ -8,52 +8,41 @@
     />
 </p>
 
-This is an experimental Javascript lexer, parser and compiler written in Rust. Currently, it has support for some of the language.
-[![Build Status](https://travis-ci.com/jasonwilliams/boa.svg?branch=master)](https://travis-ci.com/jasonwilliams/boa)
+This is an experimental Javascript lexer, parser and compiler written in Rust.
+Currently, it has support for some of the language.
+
+[![Build Status][build_badge]][build_link]
+[![codecov](https://codecov.io/gh/boa-dev/boa/branch/master/graph/badge.svg)](https://codecov.io/gh/boa-dev/boa)
 [![](http://meritbadge.herokuapp.com/boa)](https://crates.io/crates/boa)
 [![](https://docs.rs/Boa/badge.svg)](https://docs.rs/Boa/)
 
+[build_badge]: https://img.shields.io/endpoint.svg?url=https%3A%2F%2Factions-badge.atrox.dev%2Fboa-dev%2Fboa%2Fbadge&style=flat
+[build_link]: https://actions-badge.atrox.dev/boa-dev/boa/goto
+
+
 ## Live Demo (WASM)
 
-https://jasonwilliams.github.io/boa/
+<https://boa-dev.github.io/boa/>
 
-You can get more verbose errors when running from the command line
+You can get more verbose errors when running from the command line.
+
+## Development documentation
+
+You can check the internal development docs at <https://boa-dev.github.io/boa/doc>.
 
 ## Benchmarks
 
-https://jasonwilliams.github.io/boa/dev/bench/
+See [Benchmarks](https://boa-dev.github.io/boa/dev/bench/).
 
 ## Contributing
 
-If you don't already have Rust installed rustup is the recommended tool to use. It will install Rust and allow you to switch between nightly, stable and beta. You can also install additional components.
-
-```
-curl https://sh.rustup.rs -sSf | sh
-```
-
-Then simply clone this project and `cargo build` inside the directory.
-
-### VSCode
-
-#### Plugins
-
-Either the [Rust (RLS)](https://github.com/rust-lang/rls) or the [Rust Analyzer](https://github.com/rust-analyzer/rust-analyzer) extension is preferred. RLS is easier to set up but most of the development is moving towards Rust Analyzer.
-Both of these plugins will help you with your Rust Development
-
-#### Tasks
-
-There are some pre-defined tasks in [tasks.json](.vscode/tasks.json)
-
-- Build - shift+cmd/ctrl+b should build and run cargo. You should be able to make changes and run this task.
-- Test - (there is no shortcut, you'll need to make one) - Runs `Cargo Test`.
-  I personally set a shortcut of shift+cmd+option+T (or shift+ctrl+alt+T)
-
-If you don't want to install everything on your machine, you can use the Dockerfile.
-Start VSCode in container mode (you may need the docker container plugin) and use the Dockerfile.
+Please, check the [CONTRIBUTING.md](CONTRIBUTING.md) file to know how to
+contribute in the project. You will need Rust installed and an editor. We have
+some configurations ready for VSCode.
 
 ### Debugging
 
-See [Debugging](./docs/debugging.md)
+Check [debugging.md](./docs/debugging.md) for more info on debugging.
 
 ### Web Assembly
 
@@ -65,22 +54,26 @@ $ yarn install
 $ yarn serve
 ```
 
-In the console you can use `window.evaluate` to pass JavaScript in
-To develop on the web assembly side you can run `yarn serve` then go to `http://localhost:8080`
+In the console you can use `window.evaluate` to pass JavaScript in.
+To develop on the web assembly side you can run `yarn serve` then go to `http://localhost:8080`.
 
 ## Roadmap
 
-See Milestones
+See [Milestones](https://github.com/boa-dev/boa/milestones).
 
 ## Changelog
 
-see [CHANGELOG](./CHANGELOG.md)
+See [CHANGELOG.md](./CHANGELOG.md).
 
 ## Usage
 
-- Clone this repo
-- Run with `cargo run -- test.js` where `test.js` is an existing JS file
+- Clone this repo.
+- Run with `cargo run -- test.js` where `test.js` is an existing JS file.
 - If any JS doesn't work then it's a bug. Please raise an issue!
+
+## Profiling
+
+See [Profiling](./docs/profiling.md)
 
 ## Command-line Options
 
@@ -104,7 +97,7 @@ ARGS:
 
 ## Communication
 
-Feel free to contact us on Discord https://discord.gg/tUFFk9Y
+Feel free to contact us on [Discord](https://discord.gg/tUFFk9Y).
 
 ## Example
 
@@ -112,4 +105,4 @@ Feel free to contact us on Discord https://discord.gg/tUFFk9Y
 
 ## License
 
-This project is licensed under the Unlicense or MIT licenses, at your option.
+This project is licensed under the [Unlicense](./LICENSE-UNLICENSE) or [MIT](./LICENSE-MIT) licenses, at your option.

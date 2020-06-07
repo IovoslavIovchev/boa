@@ -1,15 +1,50 @@
-#![deny(unused_qualifications, clippy::correctness, clippy::style)]
-#![warn(clippy::perf)]
-#![allow(clippy::cognitive_complexity)]
+#![deny(
+    unused_qualifications,
+    clippy::all,
+    unused_qualifications,
+    unused_import_braces,
+    unused_lifetimes,
+    unreachable_pub,
+    trivial_numeric_casts,
+    rustdoc,
+    missing_debug_implementations,
+    missing_copy_implementations,
+    deprecated_in_future,
+    non_ascii_idents,
+    rust_2018_compatibility,
+    rust_2018_idioms,
+    future_incompatible,
+    nonstandard_style
+)]
+#![warn(clippy::perf, clippy::single_match_else, clippy::dbg_macro)]
+#![allow(
+    clippy::missing_inline_in_public_items,
+    clippy::cognitive_complexity,
+    clippy::must_use_candidate,
+    clippy::missing_errors_doc,
+    clippy::as_conversions
+)]
 
-use boa::builtins::console::log;
-use boa::serde_json;
-use boa::syntax::ast::{expr::Expr, token::Token};
-use boa::{exec::Executor, forward_val, realm::Realm};
-use std::io::{self, Write};
-use std::{fs::read_to_string, path::PathBuf};
-use structopt::clap::arg_enum;
-use structopt::StructOpt;
+use boa::{
+    builtins::console::log,
+    exec::Interpreter,
+    forward_val,
+    realm::Realm,
+    syntax::ast::{node::StatementList, token::Token},
+};
+use std::{
+    fs::read_to_string,
+    io::{self, Write},
+    path::PathBuf,
+};
+use structopt::{clap::arg_enum, StructOpt};
+
+#[cfg(all(target_arch = "x86_64", target_os = "linux", target_env = "gnu"))]
+#[cfg_attr(
+    all(target_arch = "x86_64", target_os = "linux", target_env = "gnu"),
+    global_allocator
+)]
+static ALLOC: jemallocator::Jemalloc = jemallocator::Jemalloc;
 
 /// CLI configuration for Boa.
 //
@@ -18,7 +53,7 @@ use structopt::StructOpt;
 // https://docs.rs/structopt/0.3.11/structopt/#type-magic
 #[allow(clippy::option_option)]
 #[derive(Debug, StructOpt)]
-#[structopt(author, about)]
+#[structopt(author, about, name = "boa")]
 struct Opt {
     /// The JavaScript file(s) to be evaluated.
     #[structopt(name = "FILE", parse(from_os_str))]
@@ -45,7 +80,7 @@ struct Opt {
     /// Dump the token stream to stdout with the given format.
     #[structopt(
         long,
-        short = "-t",
+        short = "t",
         value_name = "FORMAT",
         possible_values = &DumpFormat::variants(),
         case_insensitive = true,
@@ -56,7 +91,7 @@ struct Opt {
     /// Dump the ast to stdout with the given format.
     #[structopt(
         long,
-        short = "-a",
+        short = "a",
         value_name = "FORMAT",
         possible_values = &DumpFormat::variants(),
         case_insensitive = true
@@ -115,10 +150,10 @@ fn lex_source(src: &str) -> Result<Vec<Token>, String> {
 ///
 /// Returns a error of type String with a message,
 /// if the token stream has a parsing error.
-fn parse_tokens(tokens: Vec<Token>) -> Result<Expr, String> {
+fn parse_tokens(tokens: Vec<Token>) -> Result<StatementList, String> {
     use boa::syntax::parser::Parser;
 
-    Parser::new(tokens)
+    Parser::new(&tokens)
         .parse_all()
         .map_err(|e| format!("ParsingError: {}", e))
 }
@@ -166,7 +201,7 @@ pub fn main() -> Result<(), std::io::Error> {
 
     let realm = Realm::create().register_global_func("print", log);
 
-    let mut engine = Executor::new(realm);
+    let mut engine = Interpreter::new(realm);
 
     if cfg!(feature = "experimental-vm") {
         println!("=== experimental VM in use ===");

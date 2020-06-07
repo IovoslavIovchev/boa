@@ -1,38 +1,64 @@
-#![deny(unused_qualifications, clippy::correctness, clippy::style)]
-#![warn(clippy::perf)]
-#![allow(clippy::cognitive_complexity)]
+//! This is an experimental Javascript lexer, parser and compiler written in Rust. Currently, it has support for some of the language.
+
+#![doc(
+    html_logo_url = "https://raw.githubusercontent.com/jasonwilliams/boa/master/assets/logo.svg",
+    html_favicon_url = "https://raw.githubusercontent.com/jasonwilliams/boa/master/assets/logo.svg"
+)]
+#![deny(
+    unused_qualifications,
+    clippy::all,
+    unused_qualifications,
+    unused_import_braces,
+    unused_lifetimes,
+    unreachable_pub,
+    trivial_numeric_casts,
+    // rustdoc,
+    missing_debug_implementations,
+    missing_copy_implementations,
+    deprecated_in_future,
+    meta_variable_misuse,
+    non_ascii_idents,
+    rust_2018_compatibility,
+    rust_2018_idioms,
+    future_incompatible,
+    nonstandard_style,
+)]
+#![warn(clippy::perf, clippy::single_match_else, clippy::dbg_macro)]
+#![allow(
+    clippy::missing_inline_in_public_items,
+    clippy::cognitive_complexity,
+    clippy::must_use_candidate,
+    clippy::missing_errors_doc,
+    clippy::as_conversions,
+    clippy::let_unit_value,
+    missing_doc_code_examples
+)]
 
 pub mod builtins;
 pub mod environment;
 pub mod exec;
+pub mod profiler;
 pub mod realm;
 pub mod syntax;
 
 #[cfg(feature = "experimental-vm")]
 pub mod vm;
 
-#[cfg(feature = "wasm-bindgen")]
-mod wasm;
-
-#[cfg(feature = "wasm-bindgen")]
-pub use crate::wasm::*;
-use crate::{
-    builtins::value::ResultValue,
-    exec::{Executor, Interpreter},
+use crate::{builtins::value::ResultValue, syntax::ast::node::StatementList};
+pub use crate::{
+    exec::{Executable, Interpreter},
+    profiler::BoaProfiler,
     realm::Realm,
-    syntax::{ast::expr::Expr, lexer::Lexer, parser::Parser},
+    syntax::{lexer::Lexer, parser::Parser},
 };
 
-#[cfg(feature = "serde-ast")]
-pub use serde_json;
-
-fn parser_expr(src: &str) -> Result<Expr, String> {
+fn parser_expr(src: &str) -> Result<StatementList, String> {
     let mut lexer = Lexer::new(src);
-    lexer.lex().map_err(|e| format!("SyntaxError: {}", e))?;
+    lexer.lex().map_err(|e| format!("Syntax Error: {}", e))?;
     let tokens = lexer.tokens;
-    Parser::new(tokens)
+    Parser::new(&tokens)
         .parse_all()
-        .map_err(|e| format!("ParsingError: {}", e))
+        .map_err(|e| format!("Parsing Error: {}", e))
 }
 
 /// Execute the code using an existing Interpreter
@@ -40,16 +66,11 @@ fn parser_expr(src: &str) -> Result<Expr, String> {
 pub fn forward(engine: &mut Interpreter, src: &str) -> String {
     // Setup executor
     let expr = match parser_expr(src) {
-        Ok(v) => v,
-        Err(error_string) => {
-            return error_string;
-        }
+        Ok(res) => res,
+        Err(e) => return e,
     };
-    let result = engine.run(&expr);
-    match result {
-        Ok(v) => v.to_string(),
-        Err(v) => format!("{}: {}", "Error", v.to_string()),
-    }
+    expr.run(engine)
+        .map_or_else(|e| format!("Error: {}", e), |v| v.to_string())
 }
 
 /// Execute the code using an existing Interpreter.
@@ -57,36 +78,44 @@ pub fn forward(engine: &mut Interpreter, src: &str) -> String {
 /// Similar to `forward`, except the current value is returned instad of the string
 /// If the interpreter fails parsing an error value is returned instead (error object)
 #[cfg(not(feature = "experimental-vm"))]
+#[allow(clippy::unit_arg, clippy::drop_copy)]
 pub fn forward_val(engine: &mut Interpreter, src: &str) -> ResultValue {
+    let main_timer = BoaProfiler::global().start_event("Main", "Main");
     // Setup executor
-    match parser_expr(src) {
-        Ok(expr) => engine.run(&expr),
+    let result = match parser_expr(src) {
+        Ok(expr) => expr.run(engine),
         Err(e) => {
             eprintln!("{}", e);
             std::process::exit(1);
         }
-    }
+    };
+
+    // The main_timer needs to be dropped before the BoaProfiler is.
+    drop(main_timer);
+    BoaProfiler::global().drop();
+
+    result
 }
 
-/// Execute the code using an already existing VM.
-#[cfg(feature = "experimental-vm")]
-pub fn forward_val(engine: &mut vm::VM, src: &str) -> ResultValue {
-    match parser_expr(src) {
-        Ok(expr) => {
-            let instrs = vm::Compiler::new().compile(&expr);
-            engine.run(&instrs)
-        }
-        Err(e) => {
-            eprintln!("{}", e);
-            std::process::exit(1);
-        }
-    }
-}
+///// Execute the code using an already existing VM.
+//#[cfg(feature = "experimental-vm")]
+//pub fn forward_val(engine: &mut vm::VM, src: &str) -> ResultValue {
+//    match parser_expr(src) {
+//        Ok(expr) => {
+//            let instrs = vm::Compiler::new().compile(&expr);
+//            engine.run(&instrs)
+//        }
+//        Err(e) => {
+//            eprintln!("{}", e);
+//            std::process::exit(1);
+//        }
+//    }
+//}
 
 /// Create a clean Interpreter and execute the code
 pub fn exec(src: &str) -> String {
     // Create new Realm
     let realm = Realm::create();
-    let mut engine: Interpreter = Executor::new(realm);
+    let mut engine = Interpreter::new(realm);
     forward(&mut engine, src)
 }

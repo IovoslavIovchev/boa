@@ -3,18 +3,17 @@
 //! Each declarative Environment Record is associated with an ECMAScript program scope containing variable,
 //! `constant`, `let`, `class`, `module`, `import`, and/or function declarations.
 //! A declarative Environment Record binds the set of identifiers defined by the declarations contained within its scope.
-//! More info:  [ECMA-262 sec-declarative-environment-records](https://tc39.github.io/ecma262/#sec-declarative-environment-records)
+//! More info:  [ECMA-262 sec-declarative-environment-records](https://tc39.es/ecma262/#sec-declarative-environment-records)
 
 use crate::{
-    builtins::value::{Value, ValueData},
+    builtins::value::Value,
     environment::{
         environment_record_trait::EnvironmentRecordTrait,
         lexical_environment::{Environment, EnvironmentType},
     },
 };
-use gc::Gc;
-use gc_derive::{Finalize, Trace};
-use std::collections::hash_map::HashMap;
+use gc::{Finalize, Trace};
+use rustc_hash::FxHashMap;
 
 /// Declarative Bindings have a few properties for book keeping purposes, such as mutability (const vs let).
 /// Can it be deleted? and strict mode.
@@ -33,7 +32,7 @@ pub struct DeclarativeEnvironmentRecordBinding {
 /// declarations contained within its scope.
 #[derive(Debug, Trace, Finalize, Clone)]
 pub struct DeclarativeEnvironmentRecord {
-    pub env_rec: HashMap<String, DeclarativeEnvironmentRecordBinding>,
+    pub env_rec: FxHashMap<String, DeclarativeEnvironmentRecordBinding>,
     pub outer_env: Option<Environment>,
 }
 
@@ -80,12 +79,11 @@ impl EnvironmentRecordTrait for DeclarativeEnvironmentRecord {
 
     fn initialize_binding(&mut self, name: &str, value: Value) {
         if let Some(ref mut record) = self.env_rec.get_mut(name) {
-            match record.value {
-                Some(_) => {
-                    // TODO: change this when error handling comes into play
-                    panic!("Identifier {} has already been defined", name);
-                }
-                None => record.value = Some(value),
+            if record.value.is_none() {
+                record.value = Some(value);
+            } else {
+                // TODO: change this when error handling comes into play
+                panic!("Identifier {} has already been defined", name);
             }
         }
     }
@@ -121,16 +119,15 @@ impl EnvironmentRecordTrait for DeclarativeEnvironmentRecord {
     }
 
     fn get_binding_value(&self, name: &str, _strict: bool) -> Value {
-        match self.env_rec.get(name) {
-            Some(binding) => binding
+        if let Some(binding) = self.env_rec.get(name) {
+            binding
                 .value
                 .as_ref()
                 .expect("Could not get record as reference")
-                .clone(),
-            None => {
-                // TODO: change this when error handling comes into play
-                panic!("ReferenceError: Cannot get binding value for {}", name);
-            }
+                .clone()
+        } else {
+            // TODO: change this when error handling comes into play
+            panic!("ReferenceError: Cannot get binding value for {}", name);
         }
     }
 
@@ -152,12 +149,16 @@ impl EnvironmentRecordTrait for DeclarativeEnvironmentRecord {
         false
     }
 
+    fn get_this_binding(&self) -> Value {
+        Value::undefined()
+    }
+
     fn has_super_binding(&self) -> bool {
         false
     }
 
     fn with_base_object(&self) -> Value {
-        Gc::new(ValueData::Undefined)
+        Value::undefined()
     }
 
     fn get_outer_environment(&self) -> Option<Environment> {

@@ -1,57 +1,60 @@
 const path = require("path");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
-const {
-  CleanWebpackPlugin
-} = require("clean-webpack-plugin");
+const { CleanWebpackPlugin } = require("clean-webpack-plugin");
 const CopyWebpackPlugin = require("copy-webpack-plugin");
 const webpack = require("webpack");
 const WasmPackPlugin = require("@wasm-tool/wasm-pack-plugin");
-const MonacoWebpackPlugin = require("monaco-editor-webpack-plugin");
 
 module.exports = {
-  entry: "./index.js",
+  entry: {
+    app: "./index.js",
+    "editor.worker": 'monaco-editor/esm/vs/editor/editor.worker.js',
+    "json.worker": 'monaco-editor/esm/vs/language/json/json.worker',
+    "css.worker": 'monaco-editor/esm/vs/language/css/css.worker',
+    "html.worker": 'monaco-editor/esm/vs/language/html/html.worker',
+    "ts.worker": 'monaco-editor/esm/vs/language/typescript/ts.worker',
+  },
   output: {
     path: path.resolve(__dirname, "dist"),
-    filename: "index.js"
+    filename: "[name].js",
   },
   plugins: [
     new CleanWebpackPlugin(),
     new HtmlWebpackPlugin({
-      template: "index.html"
+      template: "index.html",
     }),
     new WasmPackPlugin({
-      crateDirectory: path.resolve(__dirname, "./boa/"),
-      outDir: path.resolve(__dirname, "./boa/pkg/")
+      crateDirectory: path.resolve(__dirname, "./boa_wasm/"),
+      outDir: path.resolve(__dirname, "./boa_wasm/pkg/"),
     }),
-    new CopyWebpackPlugin([{
+    new CopyWebpackPlugin([
+      {
         from: "./assets/*",
-        to: "."
+        to: ".",
       },
       {
         from: "./node_modules/bootstrap/dist/css/bootstrap.min.css",
-        to: "./assets"
-      }
+        to: "./assets",
+      },
     ]),
     // Have this example work in Edge which doesn't ship `TextEncoder` or
     // `TextDecoder` at this time.
     new webpack.ProvidePlugin({
       TextDecoder: ["text-encoding", "TextDecoder"],
-      TextEncoder: ["text-encoding", "TextEncoder"]
+      TextEncoder: ["text-encoding", "TextEncoder"],
     }),
-    new MonacoWebpackPlugin({
-      languages: ["javascript"]
-    })
   ],
   module: {
-    rules: [{
+    rules: [
+      {
         test: /\.css$/,
-        use: ["style-loader", "css-loader"]
+        use: ["style-loader", "css-loader"],
       },
       {
         test: /\.ttf$/,
-        use: ["file-loader"]
-      }
-    ]
+        use: ["file-loader"],
+      },
+    ],
   },
-  mode: "development"
+  mode: "development",
 };

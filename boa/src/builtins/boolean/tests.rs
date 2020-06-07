@@ -1,12 +1,10 @@
 use super::*;
-use crate::exec::Executor;
-use crate::realm::Realm;
-use crate::{builtins::value::same_value, forward, forward_val};
+use crate::{builtins::value::same_value, exec::Interpreter, forward, forward_val, realm::Realm};
 
 #[test]
 fn check_boolean_constructor_is_function() {
-    let global = ValueData::new_obj(None);
-    let boolean_constructor = create_constructor(&global);
+    let global = Value::new_object(None);
+    let boolean_constructor = Boolean::create(&global);
     assert_eq!(boolean_constructor.is_function(), true);
 }
 
@@ -15,12 +13,12 @@ fn check_boolean_constructor_is_function() {
 #[test]
 fn construct_and_call() {
     let realm = Realm::create();
-    let mut engine = Executor::new(realm);
+    let mut engine = Interpreter::new(realm);
     let init = r#"
         var one = new Boolean(1);
         var zero = Boolean(0);
         "#;
-    forward(&mut engine, init);
+    eprintln!("{}", forward(&mut engine, init));
     let one = forward_val(&mut engine, "one").unwrap();
     let zero = forward_val(&mut engine, "zero").unwrap();
 
@@ -31,7 +29,7 @@ fn construct_and_call() {
 #[test]
 fn constructor_gives_true_instance() {
     let realm = Realm::create();
-    let mut engine = Executor::new(realm);
+    let mut engine = Interpreter::new(realm);
     let init = r#"
         var trueVal = new Boolean(true);
         var trueNum = new Boolean(1);
@@ -39,7 +37,7 @@ fn constructor_gives_true_instance() {
         var trueBool = new Boolean(trueVal);
         "#;
 
-    forward(&mut engine, init);
+    eprintln!("{}", forward(&mut engine, init));
     let true_val = forward_val(&mut engine, "trueVal").expect("value expected");
     let true_num = forward_val(&mut engine, "trueNum").expect("value expected");
     let true_string = forward_val(&mut engine, "trueString").expect("value expected");
@@ -61,13 +59,13 @@ fn constructor_gives_true_instance() {
 #[test]
 fn instances_have_correct_proto_set() {
     let realm = Realm::create();
-    let mut engine = Executor::new(realm);
+    let mut engine = Interpreter::new(realm);
     let init = r#"
         var boolInstance = new Boolean(true);
         var boolProto = Boolean.prototype;
         "#;
 
-    forward(&mut engine, init);
+    eprintln!("{}", forward(&mut engine, init));
     let bool_instance = forward_val(&mut engine, "boolInstance").expect("value expected");
     let bool_prototype = forward_val(&mut engine, "boolProto").expect("value expected");
 
