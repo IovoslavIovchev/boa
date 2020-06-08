@@ -41,38 +41,53 @@ impl CodeGen for Node {
                 .res
                 .push(Instruction::Ld(Reg(compiler.next_free), Value::number(x))),
 
-            Node::BinOp(ref node) => {
-                let dest = compiler.next_free;
-                let src = dest + 1;
-
-                node.lhs().compile(compiler);
-                compiler.next_free = src;
-                node.rhs().compile(compiler);
-                compiler.next_free = dest;
-
-                compiler.res.push(Instruction::Add {
-                    dest: Reg(dest),
-                    src: Reg(src),
-                });
-            }
+            Node::BinOp(ref node) => node.compile(compiler),
 
             Node::ConstDeclList(ref xs) => {
                 for x in xs.as_ref() {
-                    // compiler.compile_node(x.init());
                     x.init().compile(compiler);
 
                     compiler.res.push(Instruction::Bind(
                         Reg(compiler.next_free),
-                        x.name().to_owned(),
+                        x.name().to_owned(), // FIXME: remove .to_owned()
                     ));
-                    // FIXME: remove .to_owned()
                 }
             }
 
             _ => {
                 dbg!(self);
-                panic!("unsupported Node");
+                unimplemented!("unsupported Node");
             }
         }
+    }
+}
+
+impl CodeGen for BinOp {
+    fn compile(&self, compiler: &mut Compiler) {
+        let dest = compiler.next_free;
+        let src = dest + 1;
+
+        self.lhs().compile(compiler);
+        compiler.next_free = src;
+        self.rhs().compile(compiler);
+        compiler.next_free = dest;
+
+        let dest = Reg(dest);
+        let src = Reg(src);
+
+        use crate::syntax::ast::op::{BinOp, CompOp, NumOp};
+        let i = match self.op() {
+            BinOp::Num(num) => match num {
+                NumOp::Add => Instruction::Add { dest, src },
+                _ => unimplemented!("unsupported NumOp"),
+            },
+            BinOp::Comp(cmp) => match cmp {
+                CompOp::Equal => unimplemented!(),
+                _ => unimplemented!(),
+            },
+            _ => unimplemented!("unsupported BinOp"),
+        };
+
+        compiler.res.push(i);
     }
 }
