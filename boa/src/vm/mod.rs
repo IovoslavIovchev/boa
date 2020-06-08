@@ -29,6 +29,12 @@ pub struct VM {
     realm: Realm,
     accumulator: Value,
     regs: Vec<Value>, // TODO: find a possible way of this being an array
+    flags: u8,
+}
+
+enum VMFlag {
+    C/*arry*/ = 0,
+    Z/*ero*/  = 1,
 }
 
 impl VM {
@@ -44,6 +50,14 @@ impl VM {
             realm,
             accumulator: Value::undefined(),
             regs: vec![Value::undefined(); 8],
+        }
+    }
+
+    fn set_flag(&mut self, flag: VMFlag, val: bool) {
+        if val {
+            // TODO:
+        } else {
+            // TODO:
         }
     }
 
