@@ -10,6 +10,7 @@ use std::fmt::{Display, Formatter, Result};
 
 pub(crate) mod compilation;
 pub(crate) mod instructions;
+
 #[cfg(test)]
 mod tests;
 
@@ -33,8 +34,8 @@ pub struct VM {
 }
 
 enum VMFlag {
-    C/*arry*/ = 0,
-    Z/*ero*/  = 1,
+    /// The zero flag
+    Z = 0,
 }
 
 impl VM {
@@ -48,6 +49,7 @@ impl VM {
     pub fn new(realm: Realm) -> Self {
         VM {
             realm,
+            flags: 0,
             accumulator: Value::undefined(),
             regs: vec![Value::undefined(); 8],
         }
@@ -55,10 +57,14 @@ impl VM {
 
     fn set_flag(&mut self, flag: VMFlag, val: bool) {
         if val {
-            // TODO:
+            self.flags |= (1 << flag as u8);
         } else {
-            // TODO:
+            self.flags &= !(2 << flag as u8);
         }
+    }
+
+    fn get_flag(&mut self, flag: VMFlag) -> bool {
+        self.flags & (1 << flag as u8) != 0
     }
 
     fn set(&mut self, reg: Reg, val: Value) {
